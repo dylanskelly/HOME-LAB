@@ -1,0 +1,122 @@
+##################################################
+# 🔐 Secrets & Environment Files
+##################################################
+.env
+.env.*
+*.env
+*.env.local
+*.env.production
+*.env.staging
+
+# Do NOT ignore example env files
+!*.env.example
+
+##################################################
+# 🔑 Keys & Certificates
+##################################################
+*.pem
+*.key
+*.crt
+*.csr
+*.pfx
+*.p12
+
+# SSH Keys
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+
+##################################################
+# 🐳 Docker
+##################################################
+# Ignore local volumes & bind mounts
+volumes/
+data/
+docker-data/
+*.db
+
+# Ignore container-specific runtime files
+*.log
+*.pid
+
+##################################################
+# 📦 Application Data (Stateful Services)
+##################################################
+# Grafana / Prometheus / Databases
+grafana/data/
+prometheus/data/
+*/data/
+
+# Nextcloud / Vaultwarden / etc
+nextcloud/data/
+vaultwarden/data/
+
+##################################################
+# 🧠 Logs & Monitoring Output
+##################################################
+logs/
+*.log
+
+##################################################
+# 💻 OS / Editor Files
+##################################################
+# Linux
+*~
+*.swp
+*.swo
+
+# Mac (just in case)
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini
+
+##################################################
+# 🧑‍💻 VSCode
+##################################################
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+
+##################################################
+# 🧪 Temporary / Build Files
+##################################################
+tmp/
+temp/
+.cache/
+*.tmp
+
+##################################################
+# 📂 Backups
+##################################################
+/mnt/backups/
+backups/
+*.bak
+*.tar
+*.tar.gz
+*.zip
+
+##################################################
+# 📊 Infrastructure / Runtime Noise
+##################################################
+*.sqlite
+*.sqlite3
+
+##################################################
+# 🚫 Terraform (if you add later)
+##################################################
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+
+##################################################
+# 🧰 Misc
+##################################################
+*.lock
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
