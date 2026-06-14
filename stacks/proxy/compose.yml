@@ -1,0 +1,43 @@
+services:
+  traefik:
+    image: traefik:v3.6
+    container_name: ${TRAEFIK_CONTAINER_NAME}
+    restart: ${RESTART_POLICY}
+    command:
+      - --configFile=/etc/traefik/traefik.yml
+    ports:
+      - "80:80"
+    networks:
+      - proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${TRAEFIK_CONFIG_DIR}/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ${TRAEFIK_DYNAMIC_DIR}:/etc/traefik/dynamic:ro
+      - ${TRAEFIK_LOGS_DIR}:/var/log/traefik
+    labels:
+      - traefik.enable=true
+
+      - traefik.http.routers.traefik.rule=Host(`${TRAEFIK_DASHBOARD_HOST}`)
+      - traefik.http.routers.traefik.entrypoints=web
+      - traefik.http.routers.traefik.service=api@internal
+      - traefik.http.routers.traefik.middlewares=security-headers@file,gzip@file
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: ${CLOUDFLARED_CONTAINER_NAME}
+    restart: ${RESTART_POLICY}
+    command: tunnel --no-autoupdate run
+    environment:
+      TZ: ${TZ}
+      TUNNEL_TOKEN: ${CF_TUNNEL_TOKEN}
+    networks:
+      - proxy
+    volumes:
+      - ${CLOUDFLARED_LOGS_DIR}:/var/log/cloudflared
+    depends_on:
+      - traefik
+
+networks:
+  proxy:
+    name: ${PROXY_NETWORK}
+    driver: bridge

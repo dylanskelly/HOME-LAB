@@ -1,0 +1,64 @@
+services:
+
+  www:
+    image: ${NGINX_IMAGE}
+    container_name: ${WWW_CONTAINER_NAME}
+    restart: ${RESTART_POLICY}
+    profiles:
+      - www
+
+    volumes:
+      - ${WWW_DATA_DIR}:/usr/share/nginx/html:ro
+      - ${WWW_LOGS_DIR}:/var/log/nginx
+
+    networks:
+      - proxy
+
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${PROXY_NETWORK}
+      - traefik.http.routers.www.rule=Host(`${WWW_HOST}`)
+      - traefik.http.routers.www.entrypoints=web
+      - traefik.http.routers.www.middlewares=security-headers@file,gzip@file
+      - traefik.http.services.www.loadbalancer.server.port=${NGINX_INTERNAL_PORT}
+
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  tafe:
+    image: ${NGINX_IMAGE}
+    container_name: ${TAFE_CONTAINER_NAME}
+    restart: ${RESTART_POLICY}
+    profiles:
+      - tafe
+
+    volumes:
+      - ${TAFE_DATA_DIR}:/usr/share/nginx/html:ro
+      - ${TAFE_LOGS_DIR}:/var/log/nginx
+
+    networks:
+      - proxy
+
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${PROXY_NETWORK}
+      - traefik.http.routers.tafe.rule=Host(`${TAFE_HOST}`)
+      - traefik.http.routers.tafe.entrypoints=web
+      - traefik.http.routers.tafe.middlewares=security-headers@file,gzip@file
+      - traefik.http.services.tafe.loadbalancer.server.port=${NGINX_INTERNAL_PORT}
+
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  proxy:
+    external: true
+    name: ${PROXY_NETWORK}
