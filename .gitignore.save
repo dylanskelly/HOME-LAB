@@ -1,5 +1,5 @@
 ##################################################
-# Secrets & Environment Files
+# 🔐 Secrets & Environment Files
 ##################################################
 .env
 .env.*
@@ -13,7 +13,7 @@ README_INTERNAL.md
 !*.env.example
 
 ##################################################
-# Keys & Certificates
+# 🔑 Keys & Certificates
 ##################################################
 *.pem
 *.key
@@ -29,24 +29,22 @@ id_ed25519
 id_ed25519.pub
 
 ##################################################
-# Docker
+# 🐳 Docker
 ##################################################
 # Ignore local volumes & bind mounts
 volumes/
 data/
 docker-data/
 secrets/
-scripts/backups/
-scripts/restore/
-*.db
 
+*.db
 
 # Ignore container-specific runtime files
 *.log
 *.pid
 
 ##################################################
-# Application Data (Stateful Services)
+# 📦 Application Data (Stateful Services)
 ##################################################
 # Grafana / Prometheus / Databases
 grafana/data/
@@ -58,13 +56,23 @@ nextcloud/data/
 vaultwarden/data/
 
 ##################################################
-# Logs & Monitoring Output
+# 🧠 Logs & Monitoring Output
 ##################################################
 logs/
 *.log
 
 ##################################################
-# OS / Editor Files
+# Backup Scripts
+##################################################
+scripts/*backup*.sh
+scripts/*restore*.sh
+
+# Do NOT ignore example backup scripts
+!scripts/examples/
+!scripts/examples/*.sh
+
+##################################################
+# 💻 OS / Editor Files
 ##################################################
 # Linux
 *~
@@ -79,14 +87,14 @@ Thumbs.db
 desktop.ini
 
 ##################################################
-# VSCode
+# 🧑‍💻 VSCode
 ##################################################
 .vscode/
 !.vscode/settings.json
 !.vscode/extensions.json
 
 ##################################################
-# Temporary / Build Files
+# 🧪 Temporary / Build Files
 ##################################################
 tmp/
 temp/
@@ -94,7 +102,7 @@ temp/
 *.tmp
 
 ##################################################
-# Backups
+# 📂 Backups
 ##################################################
 /mnt/backups/
 backups/
@@ -104,13 +112,13 @@ backups/
 *.zip
 
 ##################################################
-# Infrastructure / Runtime Noise
+# 📊 Infrastructure / Runtime Noise
 ##################################################
 *.sqlite
 *.sqlite3
 
 ##################################################
-# Terraform (if you add later)
+# 🚫 Terraform (if you add later)
 ##################################################
 .terraform/
 *.tfstate
@@ -118,7 +126,7 @@ backups/
 crash.log
 
 ##################################################
-# Misc
+# 🧰 Misc
 ##################################################
 *.lock
 npm-debug.log*
