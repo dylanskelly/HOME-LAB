@@ -1,0 +1,39 @@
+services:
+  dockhand:
+    image: ${DOCKHAND_IMAGE}
+    container_name: ${DOCKHAND_CONTAINER_NAME}
+    restart: ${RESTART_POLICY}
+
+    group_add:
+      - "${DOCKER_GID}"
+
+    environment:
+      TZ: ${TZ}
+      PUID: "1000"
+      PGID: "1000"
+      DATA_DIR: ${DOCKHAND_DATA_DIR}
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${DOCKHAND_DATA_DIR}:/app/data
+      - ${HOMELAB_ROOT}:${HOMELAB_ROOT}
+
+    networks:
+      - proxy
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=${PROXY_NETWORK}"
+
+      - "traefik.http.routers.dockhand.rule=Host(`${DOCKHAND_HOST}`)"
+      - "traefik.http.routers.dockhand.entrypoints=web"
+      - "traefik.http.routers.dockhand.service=dockhand"
+
+      - "traefik.http.services.dockhand.loadbalancer.server.port=${DOCKHAND_INTERNAL_PORT}"
+
+      - "traefik.http.routers.dockhand.middlewares=security-headers@file,gzip@file"
+
+networks:
+  proxy:
+    external: true
+    name: ${PROXY_NETWORK}
