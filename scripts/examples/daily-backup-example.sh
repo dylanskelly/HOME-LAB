@@ -8,14 +8,26 @@
 # Purpose:
 #   Demonstrates a daily backup workflow for critical homelab services.
 #
+# Includes:
+#   - Stack configuration
+#   - Application data
+#   - Documentation
+#   - Scripts
+#   - PostgreSQL database dump
+#   - SQLite database backup using a temporary helper container
+#
 # Notes:
-#   - Replace placeholder paths, container names, and credential file locations.
-#   - Do not commit real secrets, tokens, passwords, or internal host details.
+#   - Replace all placeholder paths and container names.
+#   - Do not commit real secrets, passwords, tokens, hostnames, or internal paths.
 ###############################################################################
 
 set -Eeuo pipefail
 
 trap 'echo "[ERROR] Backup failed on line $LINENO"; cleanup; disable_maintenance_mode; exit 1' ERR
+
+# -----------------------------------------------------------------------------
+# Variables
+# -----------------------------------------------------------------------------
 
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
 
@@ -32,13 +44,22 @@ MANAGEMENT_STACK_DIR="${HOMELAB_ROOT}/stacks/management/example-service"
 SECURITY_STACK_DIR="${HOMELAB_ROOT}/stacks/security/password-manager"
 STORAGE_STACK_DIR="${HOMELAB_ROOT}/stacks/storage/file-platform"
 
-# Example container names
+# Example containers
 APP_CONTAINER="file-platform-app"
 DB_CONTAINER="file-platform-db"
 PASSWORD_MANAGER_CONTAINER="password-manager"
 
-# Example credential file
-DB_PASSWORD_FILE="${HOMELAB_ROOT}/secrets/databases/db-password"
+# Example PostgreSQL database settings
+DB_NAME="example_database"
+DB_USER="example_user"
+DB_PASSWORD_FILE="${HOMELAB_ROOT}/secrets/databases/example-db-password"
+
+# Example application data paths
+PASSWORD_MANAGER_DATA_DIR="${HOMELAB_ROOT}/data/password-manager"
+
+# -----------------------------------------------------------------------------
+# Functions
+# -----------------------------------------------------------------------------
 
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
@@ -61,6 +82,10 @@ disable_maintenance_mode() {
     fi
 }
 
+# -----------------------------------------------------------------------------
+# Pre-flight Checks
+# -----------------------------------------------------------------------------
+
 log "Starting daily backup"
 
 mkdir -p "${BACKUP_DIR}"
@@ -73,36 +98,42 @@ container_running "${APP_CONTAINER}" || { log "Application container not running
 container_running "${DB_CONTAINER}" || { log "Database container not running"; exit 1; }
 container_running "${PASSWORD_MANAGER_CONTAINER}" || { log "Password manager container not running"; exit 1; }
 
-DB_PASSWORD=$(cat "${DB_PASSWORD_FILE}")
+DB_PASSWORD=$(<"${DB_PASSWORD_FILE}")
+
+# -----------------------------------------------------------------------------
+# Application Maintenance Mode
+# -----------------------------------------------------------------------------
 
 log "Enabling application maintenance mode"
 
 docker exec "${APP_CONTAINER}" \
     php occ maintenance:mode --on
 
-log "Dumping application database"
+# -----------------------------------------------------------------------------
+# Mandatory Database Dumps
+# -----------------------------------------------------------------------------
 
-docker exec "${DB_CONTAINER}" \
-    mariadb-dump \
-    -u root \
-    -p"${DB_PASSWORD}" \
-    --single-transaction \
-    --quick \
-    --lock-tables=false \
-    --all-databases \
+log "Dumping PostgreSQL database"
+
+docker exec \
+    -e PGPASSWORD="${DB_PASSWORD}" \
+    "${DB_CONTAINER}" \
+    pg_dump \
+    -U "${DB_USER}" \
+    -d "${DB_NAME}" \
     > "${TMP_DIR}/databases/application.sql"
 
 log "Backing up password manager SQLite database"
 
-docker exec "${PASSWORD_MANAGER_CONTAINER}" \
-    sqlite3 /data/db.sqlite3 ".backup '/data/db-backup.sqlite3'"
+docker run --rm \
+    -v "${PASSWORD_MANAGER_DATA_DIR}:/data:ro" \
+    -v "${TMP_DIR}/databases:/backup" \
+    alpine:latest \
+    sh -c "apk add --no-cache sqlite >/dev/null && sqlite3 /data/db.sqlite3 \".backup '/backup/password-manager.sqlite3'\""
 
-docker cp \
-    "${PASSWORD_MANAGER_CONTAINER}:/data/db-backup.sqlite3" \
-    "${TMP_DIR}/databases/password-manager.sqlite3"
-
-docker exec "${PASSWORD_MANAGER_CONTAINER}" \
-    rm -f /data/db-backup.sqlite3
+# -----------------------------------------------------------------------------
+# Create Backup Archive
+# -----------------------------------------------------------------------------
 
 log "Creating backup archive"
 
@@ -121,14 +152,26 @@ tar \
     "${HOMELAB_ROOT}/shared" \
     "${TMP_DIR}/databases"
 
+# -----------------------------------------------------------------------------
+# Disable Maintenance Mode
+# -----------------------------------------------------------------------------
+
 log "Disabling application maintenance mode"
 
 docker exec "${APP_CONTAINER}" \
     php occ maintenance:mode --off
 
+# -----------------------------------------------------------------------------
+# Verify Backup
+# -----------------------------------------------------------------------------
+
 log "Verifying archive integrity"
 
 tar -tzf "${BACKUP_FILE}" >/dev/null
+
+# -----------------------------------------------------------------------------
+# Retention Cleanup
+# -----------------------------------------------------------------------------
 
 log "Removing backups older than 7 days"
 
@@ -137,6 +180,10 @@ find "${BACKUP_DIR}" \
     -name "*.tar.gz" \
     -mtime +7 \
     -delete
+
+# -----------------------------------------------------------------------------
+# Cleanup and Summary
+# -----------------------------------------------------------------------------
 
 cleanup
 
