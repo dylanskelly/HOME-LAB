@@ -64,6 +64,7 @@ logs/
 # Backup Scripts
 ##################################################
 scripts/*backup*.sh
+scripts/*restore*.sh
 
 # Do NOT ignore example backup scripts
 !scripts/examples/
