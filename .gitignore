@@ -37,7 +37,7 @@ data/
 docker-data/
 secrets/
 scripts/backups/
-scripts/restore/
+scripts/restores/
 *.db
 
 
