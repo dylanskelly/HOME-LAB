@@ -101,6 +101,9 @@ backups/
 *.tar.gz
 *.zip
 
+# Do NOT ignore backup scripts
+!scripts/backups/
+
 ##################################################
 # Infrastructure / Runtime Noise
 ##################################################
