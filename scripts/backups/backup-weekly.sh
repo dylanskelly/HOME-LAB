@@ -51,7 +51,7 @@ TIMESTAMP="$(date +"%Y-%m-%d_%H-%M-%S")"
 HOSTNAME_SAFE="$(hostname | tr -cd '[:alnum:]-')"
 
 INCLUDE_SECRETS="${INCLUDE_SECRETS:-false}"
-BACKUP_ROOT="${BACKUP_ROOT:-${HOMELAB_ROOT}/backups}"
+BACKUP_ROOT="${BACKUP_ROOT:-/mnt/backup}"
 BACKUP_DIR="${WEEKLY_BACKUP_DIR:-${BACKUP_ROOT}/weekly}"
 RETENTION_COUNT="${WEEKLY_RETENTION_COUNT:-4}"
 
